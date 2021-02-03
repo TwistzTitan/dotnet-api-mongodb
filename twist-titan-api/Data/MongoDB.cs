@@ -1,5 +1,6 @@
 using System;
 using API.FreeBathroom.Data.Collections;
+using API.FreeBathroom.Model;
 using Microsoft.Extensions.Configuration;
 using MongoDB.Bson.Serialization;
 using MongoDB.Driver;
@@ -23,17 +24,10 @@ namespace API.FreeBathroom.Data.Database {
         }
         void MapClasse(){
             
-                if(!BsonClassMap.IsClassMapRegistered(typeof(FreeBathRoom)))
+                if(!BsonClassMap.IsClassMapRegistered(typeof(AbstractBathRoom)))
                 {
-                    BsonClassMap.RegisterClassMap<FreeBathRoom>(
-                        (cm) =>{ 
-                                cm.AutoMap();
-                                cm.MapProperty(fbr => fbr._rate);
-                                cm.MapProperty(fbr => fbr._dicas);
-                                cm.MapProperty(fbr => fbr._local);
-                                cm.MapProperty(fbr => fbr._id);
-                        }
-                        );
+                    BsonClassMap.RegisterClassMap<AbstractBathRoom>(
+                        cm => cm.AutoMap());
                 }
 
         }

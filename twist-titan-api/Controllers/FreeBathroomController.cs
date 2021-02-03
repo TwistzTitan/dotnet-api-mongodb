@@ -14,19 +14,22 @@ namespace API.FreeBathroom.Controllers
         
         private IMongoCollection<FreeBathRoom> _collection;
         private IMongoDatabase _mongo;
+
+        private IBathRoomInformation _avaliadorBath;
         
 
-        public FreeBathRoomController(MongoDBContext instance){
+        public FreeBathRoomController(MongoDBContext instance, IBathRoomInformation avaliadorBath){
 
                 _mongo = instance.DB; 
+                _avaliadorBath = avaliadorBath;
                 _collection = _mongo.GetCollection<FreeBathRoom>(typeof(FreeBathRoom).Name.ToLower());
 
         }
         
         [HttpGet("getAll")]
         public IActionResult GetAllFreeBathRoom(){
-
-           var freeBathRooms = _collection.Find(FilterDefinition<FreeBathRoom>.Empty);
+           var filter = Builders<FreeBathRoom>.Filter.Gt("avaliacao",2);
+           var freeBathRooms = _collection.Find(filter).FirstOrDefault();
            return StatusCode(200,freeBathRooms);
 
         }
@@ -35,7 +38,8 @@ namespace API.FreeBathroom.Controllers
         [Consumes("application/json")]
         public IActionResult PostOne ([FromBody] FreeBathRoomDTO dto){
             
-            var freeBathRoomOne = new FreeBathRoom(dto.rate, dto.dicas,dto.latitude,dto.longitude);        
+            FreeBathRoom freeBathRoomOne = new FreeBathRoom(dto.rate, dto.dicas,dto.latitude,dto.longitude);
+            _avaliadorBath.Avaliar(freeBathRoomOne,freeBathRoomOne.avaliacao);      
             _collection.InsertOne(freeBathRoomOne);
             return Created("Criado novo FreeBathRoom",freeBathRoomOne);
             
