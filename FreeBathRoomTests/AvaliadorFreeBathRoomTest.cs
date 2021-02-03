@@ -8,20 +8,61 @@ namespace FreeBathRoomTests
 {
     public class Tests
     {
-        public Mock<IBathRoomInformation> mockBathRoomInformation;
-        public Mock<AbstractBathRoom> mockFreeBath;
+        public Mock<IBathRoomInformation> mockBathRoomInformation = new Mock<IBathRoomInformation>();
+        public Mock<AbstractBathRoom> mockFreeBath = new Mock<AbstractBathRoom>();
+     
         [SetUp]
-        public void Setup()
-        {
+
+        public void Setup(){
+
             
+           mockBathRoomInformation.Setup(
+               mBRA => mBRA.Avaliar(mockFreeBath.Object,It.IsInRange<int>(0,10,Range.Inclusive)))
+               .Callback<AbstractBathRoom,int>(
+                   (e,n )=>{ 
+                      Assert.IsNotNull(e,"Sem Bathroom definido!");
+                      Assert.IsTrue(n < 0, "Nota fora do range aceito"); 
+                      
+                      if(n >= 6) e.avaliacaoPositiva++;
+                      else { e.avaliacaoNegativa++;}
+
+                      e.avaliacao = e.avaliacao/(e.avaliacaoNegativa+e.avaliacaoPositiva);
+
+                   });
+
         }
 
-        [Test]
-        public void Avaliador_Conta_Avaliacao_Positiva()
+        [TestCase(6)]
+        [TestCase(8)]
+        [TestCase(10)]
+        public void Avaliador_Conta_Avaliacao_Positiva(int note)
         { 
-         
-           mockBathRoomInformation.Setup(mBRA => mBRA.Avaliar(mockFreeBath.Object,It.IsInRange<int>(4,5,Range.Inclusive)));
-           Assert.Equals(mockFreeBath.Object.avaliacaoPositiva, 1);
+           var mockFbr  = mockFreeBath.Object;
+           var mockValidator = mockBathRoomInformation.Object;
+           mockValidator.Avaliar(mockFbr,note);
+           Assert.Greater(mockFbr.avaliacaoPositiva,0);
         }
+
+        [TestCase(4)]
+        [TestCase(2)]
+        [TestCase(1)]
+        public void Avaliador_Conta_Avaliacao_Negativa(int note)
+        { 
+           var mockFbr  = mockFreeBath.Object;
+           var mockValidator = mockBathRoomInformation.Object;
+           mockValidator.Avaliar(mockFbr,note);
+           Assert.Greater(mockFbr.avaliacaoNegativa,0);
+        }
+
+        [TestCase(-1)]
+        public void Avaliador_Retorna_Assertion_Numero_Fora_Range(int note)
+        { 
+           var mockFbr  = mockFreeBath.Object;
+           var mockValidator = mockBathRoomInformation.Object;   
+           var ex =  Assert.Throws<AssertionException>(()=>mockValidator.Avaliar(mockFbr,note));
+           Assert.That(ex.Message, Is.EqualTo("Nota fora do range aceito"));
+        }
+        
+
     }
 }
