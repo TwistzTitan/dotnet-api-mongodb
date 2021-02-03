@@ -17,11 +17,11 @@ namespace FreeBathRoomTests
 
             
            mockBathRoomInformation.Setup(
-               mBRA => mBRA.Avaliar(mockFreeBath.Object,It.IsInRange<int>(0,10,Range.Inclusive)))
+               mBRA => mBRA.Avaliar(mockFreeBath.Object,It.IsInRange<int>(-5,10,Range.Inclusive)))
                .Callback<AbstractBathRoom,int>(
-                   (e,n )=>{ 
+                   (e,n)=>{ 
                       Assert.IsNotNull(e,"Sem Bathroom definido!");
-                      Assert.IsTrue(n < 0, "Nota fora do range aceito"); 
+                      Assert.IsTrue((n>=0),"Nota fora do range aceito"); 
                       
                       if(n >= 6) e.avaliacaoPositiva++;
                       else { e.avaliacaoNegativa++;}
@@ -38,9 +38,13 @@ namespace FreeBathRoomTests
         public void Avaliador_Conta_Avaliacao_Positiva(int note)
         { 
            var mockFbr  = mockFreeBath.Object;
+           var mockFbr1 = mockFreeBath.Object;
            var mockValidator = mockBathRoomInformation.Object;
+           var avFbr = new AvaliadorFreeBathRoom();
            mockValidator.Avaliar(mockFbr,note);
-           Assert.Greater(mockFbr.avaliacaoPositiva,0);
+           avFbr.Avaliar(mockFbr1,note);
+
+           Assert.That(mockFbr.avaliacaoPositiva, Is.EqualTo(mockFbr1.avaliacaoPositiva));
         }
 
         [TestCase(4)]
@@ -55,12 +59,13 @@ namespace FreeBathRoomTests
         }
 
         [TestCase(-1)]
+        [TestCase(-3)]
         public void Avaliador_Retorna_Assertion_Numero_Fora_Range(int note)
         { 
            var mockFbr  = mockFreeBath.Object;
            var mockValidator = mockBathRoomInformation.Object;   
-           var ex =  Assert.Throws<AssertionException>(()=>mockValidator.Avaliar(mockFbr,note));
-           Assert.That(ex.Message, Is.EqualTo("Nota fora do range aceito"));
+           Assert.Throws<AssertionException>(()=>mockValidator.Avaliar(mockFbr,note));
+           
         }
         
 
