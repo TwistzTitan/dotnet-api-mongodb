@@ -3,6 +3,8 @@ using Moq;
 using API.FreeBathroom.Model;
 using API.FreeBathroom.Services;
 using API.FreeBathroom.Data.Collections;
+using FreeBathRoomTests.Fixtures;
+
 
 namespace FreeBathRoomTests
 {
@@ -10,12 +12,12 @@ namespace FreeBathRoomTests
     {
         public Mock<IBathRoomInformation> mockBathRoomInformation = new Mock<IBathRoomInformation>();
         public Mock<AbstractBathRoom> mockFreeBath = new Mock<AbstractBathRoom>();
-     
+
+        public BathRoomFixtures bathFixture = new BathRoomFixtures(); 
+           
         [SetUp]
+         public void Setup(){
 
-        public void Setup(){
-
-            
            mockBathRoomInformation.Setup(
                mBRA => mBRA.Avaliar(mockFreeBath.Object,It.IsInRange<int>(-5,10,Range.Inclusive)))
                .Callback<AbstractBathRoom,int>(
@@ -33,18 +35,26 @@ namespace FreeBathRoomTests
         }
 
         [TestCase(6)]
-        [TestCase(8)]
-        [TestCase(10)]
         public void Avaliador_Conta_Avaliacao_Positiva(int note)
         { 
-           var mockFbr  = mockFreeBath.Object;
-           var mockFbr1 = mockFreeBath.Object;
-           var mockValidator = mockBathRoomInformation.Object;
-           var avFbr = new AvaliadorFreeBathRoom();
-           mockValidator.Avaliar(mockFbr,note);
-           avFbr.Avaliar(mockFbr1,note);
+           var mockFreeBathRoom  = mockFreeBath.Object;
+           var freeBathRoomFixture = bathFixture.RetornaFreeBathRoomCorreto();
+           
+           var mockAvaliador = mockBathRoomInformation.Object;
+           var avaliadorFreeBathRoom = new AvaliadorFreeBathRoom();
 
-           Assert.That(mockFbr.avaliacaoPositiva, Is.EqualTo(mockFbr1.avaliacaoPositiva));
+           // Avaliação Positiva Atual
+           var avPMockFreeBath = mockFreeBathRoom.avaliacaoPositiva;
+           var avPFreeBathFixture = freeBathRoomFixture.avaliacaoPositiva;
+           
+           // Execução da avaliação
+           mockAvaliador.Avaliar(mockFreeBathRoom,note);
+           avaliadorFreeBathRoom.Avaliar(freeBathRoomFixture,note);
+           
+           
+           Assert.That(mockFreeBathRoom.avaliacaoPositiva, Is.GreaterThan(avPMockFreeBath));
+           Assert.That(freeBathRoomFixture.avaliacaoPositiva, Is.GreaterThan(avPFreeBathFixture));
+          
         }
 
         [TestCase(4)]
@@ -65,7 +75,6 @@ namespace FreeBathRoomTests
            var mockFbr  = mockFreeBath.Object;
            var mockValidator = mockBathRoomInformation.Object;   
            Assert.Throws<AssertionException>(()=>mockValidator.Avaliar(mockFbr,note));
-           
         }
         
 
